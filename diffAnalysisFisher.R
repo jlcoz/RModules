@@ -103,9 +103,6 @@ total=total[order(total$pval),]
 total$pval[total$pval<=MINNUM] = 0
 total$FDR[total$FDR<=MINNUM] = 0
 
-## Remove the possible NA created by the p.adjust method
-total = na.omit(total)
-
 ## Writing down the results : counts logFC pval adj_pval (FDR)
 write.table(total,
             file=output,
