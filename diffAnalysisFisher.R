@@ -66,6 +66,13 @@ if(exists("n")){
   }
 } else {cat("Please give the total numbers of reads for the 2 samples\n"); q()}
 
+## Set the ouput path : File or STDOUT
+if(exists("o")){
+  if(o=="stdout" || o=="-"){
+    output=stdout()
+  } else {output=o}
+} else { output=stdout() }
+
 ## Load the total number of reads for each of the 2 samples
 N1=vector_total_number_reads[[1]]
 N2=vector_total_number_reads[[2]]
@@ -101,5 +108,8 @@ total = na.omit(total)
 
 ## Writing down the results : counts logFC pval adj_pval (FDR)
 write.table(total,
+            file=output,
             sep="\t",
-            quote=FALSE, row.names = FALSE, col.names = TRUE)
+            quote=FALSE,
+            row.names = FALSE,
+            col.names = TRUE)
