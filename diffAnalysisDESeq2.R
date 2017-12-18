@@ -87,9 +87,6 @@ rownames(count_table) <- count_table[[1]]
 ## ...and then remove the peak column
 count_table[[1]] = NULL
 
-##Filter the lines made only of 0
-count_table=subset(count_table, rowSums(count_table)>0)
-
 ##Convert the count table as a count matrix
 matrix_counts=as.matrix(count_table)
 
@@ -121,6 +118,7 @@ dds <- nbinomWaldTest(dds, quiet=T)
 
 ## Multiple testing correction : Benjamimi Hochberg method
 resDESeq2 <- results(dds, pAdjustMethod = "BH", independentFiltering =F)
+#resDESeq2 <- results(dds, pAdjustMethod = "BH", independentFiltering =T)
 
 ## Shape the final result table
 total = data.frame(rownames(count_table),
