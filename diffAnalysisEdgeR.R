@@ -89,9 +89,6 @@ rownames(count_table) <- count_table[[1]]
 ## ...and then remove the peak column
 count_table[[1]] = NULL
 
-##Remove the all 0 rows
-count_table=subset(count_table, rowSums(count_table)>0)
-
 ## Create an edgeR object required for the analysis
 dds <- DGEList(counts=count_table,group=condition)
 
@@ -131,9 +128,6 @@ total=total[order(total$pval),]
 ## Filter the pvalues under the minimum value
 total$pval[total$pval<=MINNUM] = 0
 total$FDR[total$FDR<=MINNUM] = 0
-
-## Remove the possible NA created by the p.adjust method
-total = na.omit(total)
 
 ## Writing down the results : counts peaks logFC adj_pval (FDR) values
 write.table(total,
