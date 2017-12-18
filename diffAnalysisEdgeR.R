@@ -15,10 +15,10 @@ args=commandArgs(TRUE)
 help <- function(){
   cat("\ndiffAnalysisEdgeR.R : Retrieve differential peaks from a count matrix\n")
   cat("Usage: diffAnalysisEdgeR.R -i - -a n1 -b n2\n")
-  cat("-i : Count matrix as a file or stdin (-)\n")
-  cat("-a : Number of samples in the first condition\n")
-  cat("-b : Numbre of samples in the second condition\n")
-  cat("-n : Normalization factor as a vector : x1,x2,...\n")
+  cat("-i : Count matrix as a file or stdin (-) [Required]\n")
+  cat("-a : Number of samples in the first condition [Required]\n")
+  cat("-b : Numbre of samples in the second condition [Required]\n")
+  cat("-n : Normalization factor as a vector : x1,x2,... [Default: EdgeR computation]\n")
   cat("-o : Output as a file or stdout (-)\n")
   cat("\n")
   q()
@@ -90,22 +90,22 @@ rownames(count_table) <- count_table[[1]]
 count_table[[1]] = NULL
 
 ## Create an edgeR object required for the analysis
-dds <- DGEList(counts=count_table,group=condition)
+dge <- DGEList(counts=count_table,group=condition)
 
 ## If no normalization factors are given by parameters, TMM computation
 if(!NF){
-  dds=calcNormFactors(dds)
-} else{dds$samples$norm.factors = norm_factor_vector}
+  dge=calcNormFactors(dge)
+} else{dge$samples$norm.factors = norm_factor_vector}
 
 ## Create a design matrix needed for the dispersion estimation
 design <- model.matrix(~condition)
 
 ## Estimation of the dispersion parameter
-dds <- estimateDisp(dds, design)
+dge <- estimateDisp(dge, design)
 
 ## Fisher's Exact Test corrected by Baye's inference
 ## Gives uncorrected p-values
-res_exact_test <- exactTest(dds)
+res_exact_test <- exactTest(dge)
 
 ## Multiple testing correction : Benjamimi Hochberg method
 adj_pval=p.adjust(res_exact_test$table$PValue,method = "BH")
@@ -125,7 +125,7 @@ names(total)[[1]]="#peaks"
 ## Order the table by pvalue
 total=total[order(total$pval),]
 
-## Filter the pvalues under the minimum value
+## Filter the pvalues under the minimum value for awk
 total$pval[total$pval<=MINNUM] = 0
 total$FDR[total$FDR<=MINNUM] = 0
 
