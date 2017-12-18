@@ -14,12 +14,12 @@ args=commandArgs(TRUE)
 ## Help
 help <- function(){
   cat("\ndiffAnalysisEdgeR.R : Retrieve differential peaks from a count matrix\n")
-  cat("Usage: diffAnalysisEdgeR.R -i - -a n1 -b n2\n")
+  cat("Usage: diffAnalysisEdgeR.R -i - -a n1 -b n2 -n x1,x2... -o -\n")
   cat("-i : Count matrix as a file or stdin (-) [Required]\n")
   cat("-a : Number of samples in the first condition [Required]\n")
   cat("-b : Numbre of samples in the second condition [Required]\n")
   cat("-n : Normalization factor as a vector : x1,x2,... [Default: EdgeR computation]\n")
-  cat("-o : Output as a file or stdout (-)\n")
+  cat("-o : Output as a file or stdout (-) [Required]\n")
   cat("\n")
   q()
 }
@@ -80,7 +80,7 @@ if(exists("o")){
   if(o=="stdout" || o=="-"){
     output=stdout()
   } else {output=o}
-} else { output=stdout() }
+} else { cat("No output specified\n"); q() }
 
 ## Start of the analysis
 ## EdgeR requires only numbers within the matrix
