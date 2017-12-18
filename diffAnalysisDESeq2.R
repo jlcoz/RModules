@@ -12,16 +12,17 @@ args=commandArgs(TRUE)
 ## Help
 help <- function(){
   cat("\ndiffAnalysisDESeq2.R : Retrieve differential peaks from a count matrix\n")
-  cat("Usage: diffAnalysisDESeq2.R -i - -a n1 -b n2 -n x1,x2... -o -\n")
+  cat("Usage: diffAnalysisDESeq2.R -i - -a n1 -b n2 -n x1,x2... -o - -F T -1 F\n")
   cat("-i : Count matrix as a file or stdin (-) [Required]\n")
   cat("-a : Number of samples in the first condition [Required]\n")
   cat("-b : Numbre of samples in the second condition [Required]\n")
   cat("-n : Normalization factor as a vector : x1,x2,... [Default: DESeq2 computation\n")
   cat("-o : Output as a file or stdout (-) [Required]\n")
+  cat("-F : Peaks with a mean normalized count < optimal threshold get NA as adjusted pvalue : T/F [Default: T]\n")
+  cat("-1 : Replace NA with 1 (pvalue/adjusted pvalue) and 0 (logFC) : T/F [Default: F]\n")
   cat("\n")
   q()
 }
-
 ## Save values of each argument
 if(length(args)==0 || !is.na(charmatch("-help",args))){
   help()
@@ -36,12 +37,13 @@ if(length(args)==0 || !is.na(charmatch("-help",args))){
 
 ## Load the matrix into a dataframe
 if(exists("i")){
-  if(i=="stdin" || i=="-"){
+  if (i==1){
+    cat("Input file does not exist\n"); q()
+  } else if(i=="stdin" || i=="-"){
     count_table=read.csv(pipe('cat /dev/stdin'), sep="\t", skip=0, header = T, comment.char = "", check.names = F)
   } else if (file.exists(i)){
-    count_table=read.csv(i, sep="\t", skip=0, header = T, comment.char = "", check.names = F)
-  } else { cat("Input file does not exist\n"); q() }
-  
+      count_table=read.csv(i, sep="\t", skip=0, header = T, comment.char = "", check.names = F)
+  }
   ## Test the second-to-end column to see if they contain only numbers
   if(!all(sapply(count_table, function(x) class(x) %in% c("integer","numeric"))[-1])){
     cat("The matrix does not contain only numbers\n");q()
@@ -75,13 +77,28 @@ if(exists("n")){
 
 ## Set the ouput path : File or STDOUT
 if(exists("o")){
-  if(o=="stdout" || o=="-"){
+  if (o==1){
+    #Means that -o is not set
+    cat("Output file not specified\n"); q()
+  } else if(o=="stdout" || o=="-"){
     output=stdout()
   } else {output=o}
 } else { cat("Output file not specified\n"); q() }
 
+if(exists("F")){
+  print("FLAIRE")
+  # if (F==1){
+  #   #Means that -o is not set
+  #   cat("Please right only T or F as argument\n"); q() 
+  # } else if(F=="F"){
+  #     independant_filtering=F
+  # } else if (F=="T") {
+  #     independant_filtering=T
+  # }
+} else { print("MICHEL");independant_filtering=T}
 
-
+##TODO 
+##IMPLEMENT THE MINUS 1 OPTION FOR REPLACING NA
 
 ## Start of the analysis
 ## DESeq2 requires only numbers within the matrix
@@ -93,6 +110,7 @@ count_table[[1]] = NULL
 ##Convert the count table as a count matrix
 matrix_counts=as.matrix(count_table)
 
+##Create a dataframe linking each sample with its normalization factor
 colData=data.frame(norm_factor_vector, condition)
 
 ## Create a DESeq2 object required for the analysis
@@ -106,11 +124,10 @@ normFactors <- matrix(colData$norm_factor_vector,
                       dimnames=list(1:nrow(dds),1:ncol(dds)),
                       byrow = TRUE)
 
-
 ## If no normalization factors are given by parameters, use DESeq2 computation method
-if(!NF){
-  dds=estimateSizeFactors(dds)
-} else{ normalizationFactors(dds) = normFactors }
+if(NF){
+  normalizationFactors(dds) = normFactors
+} else{dds=estimateSizeFactors(dds)}
 
 ## Estimation of the dispersion parameter
 ## Use the local fitTyp to fit a local regression of log dispersions over log base mean
@@ -120,8 +137,11 @@ dds <- estimateDispersions(dds, quiet=T, fitType="local")
 dds <- nbinomWaldTest(dds, quiet=T)
 
 ## Multiple testing correction : Benjamimi Hochberg method
-#resDESeq2 <- results(dds, pAdjustMethod = "BH", independentFiltering =F)
-resDESeq2 <- results(dds, pAdjustMethod = "BH", independentFiltering =T)
+if(independant_filtering){
+  resDESeq2 <- results(dds, pAdjustMethod = "BH", independentFiltering =T)
+} else {
+  resDESeq2 <- results(dds, pAdjustMethod = "BH", independentFiltering =F)
+}
 
 ## Shape the final result table
 total = data.frame(rownames(count_table),
