@@ -12,14 +12,14 @@ args=commandArgs(TRUE)
 ## Help
 help <- function(){
   cat("\ndiffAnalysisDESeq2.R : Retrieve differential peaks from a count matrix\n")
-  cat("Usage: diffAnalysisDESeq2.R -i - -a n1 -b n2 -n x1,x2... -o - -F T -1 F\n")
+  cat("Usage: diffAnalysisDESeq2.R -i - -a n1 -b n2 -n x1,x2... -o - -f T -r F\n")
   cat("-i : Count matrix as a file or stdin (-) [Required]\n")
   cat("-a : Number of samples in the first condition [Required]\n")
   cat("-b : Numbre of samples in the second condition [Required]\n")
   cat("-n : Normalization factor as a vector : x1,x2,... [Default: DESeq2 computation\n")
   cat("-o : Output as a file or stdout (-) [Default: stdout]\n")
   cat("-f : Peaks with a mean normalized count < optimal threshold get NA as adjusted pvalue : T/F [Default: T]\n")
-  cat("-1 : Replace NA with 1 (pvalue/adjusted pvalue) and 0 (logFC) : T/F [Default: F]\n")
+  cat("-r : Replace NA with 1 (pvalue/adjusted pvalue) and 0 (logFC) : T/F [Default: F]\n")
   cat("\n")
   q()
 }
@@ -84,13 +84,19 @@ if(exists("o")){
 
 ## Set the independant filtering boolean for the DESeq2 p.adjust method
 if(exists("f")){
-  if (F=="F") {
+  if (f=="F") {
     independant_filtering=F
-  }
+  } else {independant_filtering=T}
 } else {independant_filtering=T}
 
-##TODO 
+
+##TODO
 ##IMPLEMENT THE MINUS 1 OPTION FOR REPLACING NA
+if(exists("r")){
+  if (r=="T") {
+    remove_NA=T
+  } else {remove_NA=F}
+} else {remove_NA=F}
 
 ## Start of the analysis
 ## DESeq2 requires only numbers within the matrix
@@ -123,12 +129,13 @@ if(NF){
 
 ## Estimation of the dispersion parameter
 ## Use the local fitTyp to fit a local regression of log dispersions over log base mean
-dds <- estimateDispersions(dds, quiet=T, fitType="parametric")
+dds <- estimateDispersions(dds, quiet=T, fitType="local")
 
 ## Negative Binomial GLM fitting and Wald statistics
 dds <- nbinomWaldTest(dds, quiet=T)
 
 ## Multiple testing correction : Benjamimi Hochberg method
+## If the -f option is set to F, it will modify DESeq2 default behaviour to avoid producing NA values for FDR
 if(independant_filtering){
   resDESeq2 <- results(dds, pAdjustMethod = "BH", independentFiltering =T)
 } else {
@@ -151,6 +158,13 @@ total=total[order(total$pval),]
 ## Filter the pvalues under the minimum value
 total$pval[total$pval<=MINNUM] = 0
 total$FDR[total$FDR<=MINNUM] = 0
+
+## If the -1 option is set to T, it will replace the NAs
+if(remove_NA){
+  total$pval[is.na(total$pval)] = 1
+  total$FDR[is.na(total$FDR)] = 1
+  total$logFC[is.na(total$logFC)] = 0
+}
 
 ## Writing down the results : counts peaks logFC pval adj_pval (FDR) values
 write.table(total,
