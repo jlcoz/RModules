@@ -16,7 +16,7 @@ MINNUM=2.2250738585072014e-308
 ## Help
 help <- function(){
   cat("\ndiffAnalysisFisher.R : Retrieve differential peaks from a count matrix\n")
-  cat("Usage: diffAnalysisFisher.R -i - -n N1,N2 -o -\n")
+  cat("Usage: diffAnalysisFisher.R -i - -a N1 -b N2 -o -\n")
   cat("-i : Count matrix as a file or stdin (-) [Required]\n")
   cat("-a : Total number of reads for sample 1 : N1 [Required]\n")
   cat("-b : Total number of reads for sample 2 : N2 [Required]\n")
@@ -58,7 +58,10 @@ if(exists("a") && exists("b")){
   if(!is.na(a) && !is.na(b)){
     N1=strtoi(a)
     N2=strtoi(b)
-  } else{ cat("Specify total number of reads for both samples\n"); q()}
+    if(N1<max(count_table[-1]) || N2<max(count_table[-1])){
+      cat("Total number of reads is inferior to the highest count in the table\n"); q()
+    }
+  } else{ cat("Specify total number of reads for both samples\n"); q() }
 } else { cat("Specify total number of reads for both samples\n"); q() }
 
 ## Set the ouput path : File or STDOUT
