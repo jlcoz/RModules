@@ -19,7 +19,7 @@ help <- function(){
   cat("-a : Number of samples in the first condition [Required]\n")
   cat("-b : Numbre of samples in the second condition [Required]\n")
   cat("-n : Normalization factor as a vector : x1,x2,... [Default: EdgeR computation]\n")
-  cat("-o : Output as a file or stdout (-) [Required]\n")
+  cat("-o : Output as a file or stdout (-) [Default: stdout]\n")
   cat("\n")
   q()
 }
@@ -38,15 +38,16 @@ if(length(args)==0 || !is.na(charmatch("-help",args))){
 
 ## Load the matrix into a dataframe
 if(exists("i")){
-  if(i=="stdin" || i=="-"){
+  if (i==1){
+    cat("Input file does not exist\n"); q()
+  } else if(i=="stdin" || i=="-"){
     count_table=read.csv(pipe('cat /dev/stdin'), sep="\t", skip=0, header = T, comment.char = "", check.names = F)
   } else if (file.exists(i)){
     count_table=read.csv(i, sep="\t", skip=0, header = T, comment.char = "", check.names = F)
-} else { cat("Input file does not exist\n"); q() }
-
-  ## Test the second-to-end column to see if they contain only numbers
-  if(!all(sapply(count_table, function(x) class(x) %in% c("integer","numeric"))[-1])){
-    cat("The matrix does not contain only numbers\n");q()
+  }
+  ## Test the second-to-end column to see if they contain only integers
+  if(!all(sapply(count_table, function(x) class(x) %in% c("integer"))[-1])){
+    cat("The counts does not contain only integers\n");q()
   }
 } else { cat("No input specified\n"); q() }
 
@@ -80,7 +81,7 @@ if(exists("o")){
   if(o=="stdout" || o=="-"){
     output=stdout()
   } else {output=o}
-} else { cat("No output specified\n"); q() }
+} else {output=stdout()}
 
 ## Start of the analysis
 ## EdgeR requires only numbers within the matrix
