@@ -13,7 +13,7 @@ args=commandArgs(TRUE)
 help <- function(){
   cat("\ndiffAnalysisDESeq2.R : Retrieve differential peaks from a count matrix\n")
   cat("Usage: diffAnalysisDESeq2.R -i - -a n1 -b n2 -n x1,x2... -o - -f T -r F\n")
-  cat("-i : Count matrix as a file or stdin (-) [Required]\n")
+  cat("-i : Count table as a file or stdin (-) [Required]\n")
   cat("-a : Number of samples in the first condition [Required]\n")
   cat("-b : Numbre of samples in the second condition [Required]\n")
   cat("-n : Normalization factor as a vector : x1,x2,... [Default: DESeq2 computation\n")
