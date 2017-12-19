@@ -17,8 +17,8 @@ help <- function(){
   cat("-a : Number of samples in the first condition [Required]\n")
   cat("-b : Numbre of samples in the second condition [Required]\n")
   cat("-n : Normalization factor as a vector : x1,x2,... [Default: DESeq2 computation\n")
-  cat("-o : Output as a file or stdout (-) [Required]\n")
-  cat("-F : Peaks with a mean normalized count < optimal threshold get NA as adjusted pvalue : T/F [Default: T]\n")
+  cat("-o : Output as a file or stdout (-) [Default: stdout]\n")
+  cat("-f : Peaks with a mean normalized count < optimal threshold get NA as adjusted pvalue : T/F [Default: T]\n")
   cat("-1 : Replace NA with 1 (pvalue/adjusted pvalue) and 0 (logFC) : T/F [Default: F]\n")
   cat("\n")
   q()
@@ -44,9 +44,9 @@ if(exists("i")){
   } else if (file.exists(i)){
       count_table=read.csv(i, sep="\t", skip=0, header = T, comment.char = "", check.names = F)
   }
-  ## Test the second-to-end column to see if they contain only numbers
-  if(!all(sapply(count_table, function(x) class(x) %in% c("integer","numeric"))[-1])){
-    cat("The matrix does not contain only numbers\n");q()
+  ## Test the second-to-end column to see if they contain only integers
+  if(!all(sapply(count_table, function(x) class(x) %in% c("integer"))[-1])){
+    cat("The counts does not contain only integers\n");q()
   }
 } else { cat("No input specified\n"); q() }
 
@@ -77,25 +77,17 @@ if(exists("n")){
 
 ## Set the ouput path : File or STDOUT
 if(exists("o")){
-  if (o==1){
-    #Means that -o is not set
-    cat("Output file not specified\n"); q()
-  } else if(o=="stdout" || o=="-"){
+  if(o=="stdout" || o=="-"){
     output=stdout()
   } else {output=o}
-} else { cat("Output file not specified\n"); q() }
+} else {output=stdout()}
 
-if(exists("F")){
-  print("FLAIRE")
-  # if (F==1){
-  #   #Means that -o is not set
-  #   cat("Please right only T or F as argument\n"); q() 
-  # } else if(F=="F"){
-  #     independant_filtering=F
-  # } else if (F=="T") {
-  #     independant_filtering=T
-  # }
-} else { print("MICHEL");independant_filtering=T}
+## Set the independant filtering boolean for the DESeq2 p.adjust method
+if(exists("f")){
+  if (F=="F") {
+    independant_filtering=F
+  }
+} else {independant_filtering=T}
 
 ##TODO 
 ##IMPLEMENT THE MINUS 1 OPTION FOR REPLACING NA
@@ -131,7 +123,7 @@ if(NF){
 
 ## Estimation of the dispersion parameter
 ## Use the local fitTyp to fit a local regression of log dispersions over log base mean
-dds <- estimateDispersions(dds, quiet=T, fitType="local")
+dds <- estimateDispersions(dds, quiet=T, fitType="parametric")
 
 ## Negative Binomial GLM fitting and Wald statistics
 dds <- nbinomWaldTest(dds, quiet=T)
