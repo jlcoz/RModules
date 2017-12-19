@@ -17,9 +17,10 @@ MINNUM=2.2250738585072014e-308
 help <- function(){
   cat("\ndiffAnalysisFisher.R : Retrieve differential peaks from a count matrix\n")
   cat("Usage: diffAnalysisFisher.R -i - -n N1,N2 -o -\n")
-  cat("-i : Count matrix as a file or stdin (-)\n")
-  cat("-n : Total number of reads : N1,N2\n")
-  cat("-o : Output as a file or stdout (-)\n")
+  cat("-i : Count matrix as a file or stdin (-) [Required]\n")
+  cat("-a : Total number of reads for sample 1 : N1 [Required]\n")
+  cat("-b : Total number of reads for sample 2 : N2 [Required]\n")
+  cat("-o : Output as a file or stdout (-) [Default: stdout]\n")
   cat("\n")
   q()
 }
@@ -32,39 +33,33 @@ if(length(args)==0 || !is.na(charmatch("-help",args))){
     if(grepl("^-",args[ii]) && args[ii] != "-"){
       if(ii+1<=length(args) && (!grepl("^-",args[ii+1]) || args[ii+1]=="-")){
         assign(gsub("-","",args[ii]),args[ii+1])
-      } else {assign(gsub("-","",args[ii]),1) }
+      } else {assign(gsub("-","",args[ii]),NA) }
     }
   }}
 
 ## Load the matrix into a dataframe
+## Load the table into a dataframe
 if(exists("i")){
-  if(i=="stdin" || i=="-"){
-    matrix_counts=read.csv(pipe('cat /dev/stdin'), sep="\t", skip=0, header = T, comment.char = "", check.names = F)
+  if (i==1){
+    cat("Input file does not exist\n"); q()
+  } else if(i=="stdin" || i=="-"){
+    count_table=read.csv(pipe('cat /dev/stdin'), sep="\t", skip=0, header = T, comment.char = "", check.names = F)
   } else if (file.exists(i)){
-    matrix_counts=read.csv(i, sep="\t", skip=0, header = T, comment.char = "", check.names = F)
-  } else { cat("Input file does not exist\n"); q() }
-  
-  ##Test if the matrix has only 3 columns
-  if(ncol(matrix_counts)!=3){
-    cat("The matrix is not 3 columns formatted\n"); q()
+    count_table=read.csv(i, sep="\t", skip=0, header = T, comment.char = "", check.names = F)
   }
-  
-  ## Test the second-to-end column to see if they contain only numbers
-  if(!all(sapply(matrix_counts, function(x) class(x) %in% c("integer","numeric"))[-1])){
-    cat("The matrix does not contain only numbers\n");q()
+  ## Test the second-to-end column to see if they contain only integers
+  if(!all(sapply(count_table, function(x) class(x) %in% c("integer"))[-1])){
+    cat("The counts does not contain only integers\n");q()
   }
 } else { cat("No input specified\n"); q() }
 
-## Get the total number of reads for the two samples
-if(exists("n")){
-  ## Args are stored in a list ordered like : 1 arg1 value1
-  ##                                          3 arg2 value2
-  vector=args[which(args=="-n")+1]
-  vector_total_number_reads = as.numeric(strsplit(vector, ",")[[1]])
-  if(length(vector_total_number_reads)!=2){
-    cat("Please enter only 2 numbers\n"); q()
-  }
-} else {cat("Please give the total numbers of reads for the 2 samples\n"); q()}
+## Load the total number of reads for each of the 2 samples
+if(exists("a") && exists("b")){
+  if(!is.na(a) && !is.na(b)){
+    N1=strtoi(a)
+    N2=strtoi(b)
+  } else{ cat("Specify total number of reads for both samples\n"); q()}
+} else { cat("Specify total number of reads for both samples\n"); q() }
 
 ## Set the ouput path : File or STDOUT
 if(exists("o")){
@@ -73,12 +68,14 @@ if(exists("o")){
   } else {output=o}
 } else { output=stdout() }
 
-## Load the total number of reads for each of the 2 samples
-N1=vector_total_number_reads[[1]]
-N2=vector_total_number_reads[[2]]
+## Start of the analysis
 
 ## Design contingency table as matrix
-contingency_matrix <- lapply(c(1:nrow(matrix_counts)), function(x) {y <- matrix_counts[x,]; matrix(unlist(c(y[,2],N1-y[,2],y[,3],N2-y[,3])),nrow=2)})
+## [,1]           [,2]
+## [1,] count1    count2
+## [2,] N1-count1 N2-count2
+
+contingency_matrix <- lapply(c(1:nrow(count_table)), function(x) {y <- count_table[x,]; matrix(unlist(c(y[,2],N1-y[,2],y[,3],N2-y[,3])),nrow=2)})
 
 ## Run fisher's exact on contingency table
 pval <- sapply(contingency_matrix, rowFisherP)
@@ -87,10 +84,11 @@ pval <- sapply(contingency_matrix, rowFisherP)
 adj_pval <- p.adjust(pval, method = "BH")
 
 ## Calculate fold change
-logFC <- apply(matrix_counts, 1, function(x) log(strtoi(x[[3]])/strtoi(x[[2]]))/log(2))
+
+logFC <- apply(count_table, 1, function(x) log(strtoi(x[[3]])/strtoi(x[[2]]))/log(2))
 
 ## Shaping the result dataframe
-total=matrix_counts
+total=count_table
 total$logFC=logFC
 total$pval=pval
 total$FDR=adj_pval
