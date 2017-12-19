@@ -31,13 +31,13 @@ if(length(args)==0 || !is.na(charmatch("-help",args))){
     if(grepl("^-",args[ii]) && args[ii] != "-"){
       if(ii+1<=length(args) && (!grepl("^-",args[ii+1]) || args[ii+1]=="-")){
         assign(gsub("-","",args[ii]),args[ii+1])
-      } else {assign(gsub("-","",args[ii]),1) }
+      } else {assign(gsub("-","",args[ii]),NA) }
     }
   }}
 
-## Load the matrix into a dataframe
+## Load the table into a dataframe
 if(exists("i")){
-  if (i==1){
+  if (is.na(i)){
     cat("Input file does not exist\n"); q()
   } else if(i=="stdin" || i=="-"){
     count_table=read.csv(pipe('cat /dev/stdin'), sep="\t", skip=0, header = T, comment.char = "", check.names = F)
@@ -52,8 +52,10 @@ if(exists("i")){
 
 ## Construct the design vector
 if(exists("a") & exists("b")){
-  nb_samples_condition1=strtoi(a)
-  nb_samples_condition2=strtoi(b)
+  if(!is.na(a) && !is.na(b)){
+    nb_samples_condition1=strtoi(a)
+    nb_samples_condition2=strtoi(b)
+  } else{ cat("Specify the number of samples for both condition\n"); q()}
   ## Test if the matrix as the same number of columns as number of samples
   ## The +1 represents the "peaks" column
   if(ncol(count_table)==nb_samples_condition1+nb_samples_condition2+1){
@@ -89,9 +91,7 @@ if(exists("f")){
   } else {independant_filtering=T}
 } else {independant_filtering=T}
 
-
-##TODO
-##IMPLEMENT THE MINUS 1 OPTION FOR REPLACING NA
+## Set the remove_NA boolean
 if(exists("r")){
   if (r=="T") {
     remove_NA=T
