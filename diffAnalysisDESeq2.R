@@ -91,10 +91,9 @@ if(exists("f")){
   } else {independant_filtering=T}
 } else {independant_filtering=T}
 
-print(exists("150"))
 ## Set the remove_NA boolean
-if(exists("1")){
-  if (1=="T") {
+if(exists("r")){
+  if (r=="T") {
     remove_NA=T
   } else {remove_NA=F}
 } else {remove_NA=F}
