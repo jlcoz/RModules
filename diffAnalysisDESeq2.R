@@ -12,13 +12,13 @@ args=commandArgs(TRUE)
 ## Help
 help <- function(){
   cat("\ndiffAnalysisDESeq2.R : Retrieve differential peaks from a count matrix\n")
-  cat("Usage: diffAnalysisDESeq2.R -i - -a n1 -b n2 -n x1,x2... -o - -f T -r F\n")
+  cat("Usage: diffAnalysisDESeq2.R -i - -a n1 -b n2 -n x1,x2... -o - -f F -r F\n")
   cat("-i : Count table as a file or stdin (-) [Required]\n")
   cat("-a : Number of samples in the first condition [Required]\n")
   cat("-b : Numbre of samples in the second condition [Required]\n")
   cat("-n : Normalization factor as a vector : x1,x2,... [Default: DESeq2 computation\n")
   cat("-o : Output as a file or stdout (-) [Default: stdout]\n")
-  cat("-f : Peaks with a mean normalized count < optimal threshold get NA as adjusted pvalue : T/F [Default: T]\n")
+  cat("-f : Adjusted p-values can be NA for all none-0 lines : T/F [Default: T]\n")
   cat("-r : Replace NA with 1 (pvalue/adjusted pvalue) and 0 (logFC) : T/F [Default: F]\n")
   cat("\n")
   q()
@@ -84,7 +84,7 @@ if(exists("o")){
   } else {output=o}
 } else {output=stdout()}
 
-## Set the independant filtering boolean for the DESeq2 p.adjust method
+## Set the independant filterin g boolean for the DESeq2 p.adjust method
 if(exists("f")){
   if (f=="F") {
     independant_filtering=F
@@ -135,11 +135,11 @@ dds <- estimateDispersions(dds, quiet=T, fitType="local")
 dds <- nbinomWaldTest(dds, quiet=T)
 
 ## Multiple testing correction : Benjamimi Hochberg method
-## If the -f option is set to F, it will modify DESeq2 default behaviour to avoid producing NA values for FDR
+## If the -f option is set to F, it will modify DESeq2 default behaviour to avoid producing NA values
 if(independant_filtering){
-  resDESeq2 <- results(dds, pAdjustMethod = "BH", independentFiltering =T)
+	resDESeq2 <- results(dds, pAdjustMethod = "BH", independentFiltering =T)
 } else {
-  resDESeq2 <- results(dds, pAdjustMethod = "BH", independentFiltering =F)
+	resDESeq2 <- results(dds, pAdjustMethod = "BH", independentFiltering =F)
 }
 
 ## Shape the final result table
