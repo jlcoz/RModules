@@ -40,7 +40,7 @@ if(length(args)==0 || !is.na(charmatch("-help",args))){
 ## Load the matrix into a dataframe
 ## Load the table into a dataframe
 if(exists("i")){
-  if (i==1){
+  if (is.na(i)){
     cat("Input file does not exist\n"); q()
   } else if(i=="stdin" || i=="-"){
     count_table=read.csv(pipe('cat /dev/stdin'), sep="\t", skip=0, header = T, comment.char = "", check.names = F)
