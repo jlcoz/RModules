@@ -14,7 +14,7 @@ help <- function(){
   cat("-i : Input table as a file or stdin (-) [Required]\n")
   cat("-f : First line of the input table is a header : T/F [Default: F]\n")
   cat("-c : Column with raw p-values (int) [Required]\n")
-  cat("-m : P-value adjust method used : BH or bonferroni [Default: BH]\n")
+  cat("-m : P-value adjust method used : BH/bonferroni/holm/hochberg/hommel/BY/fdr/none [Default: BH]\n")
   cat("-o : Output as a file or stdout (-) [Default: stdout]\n")
   cat("\n")
   q()
@@ -77,9 +77,10 @@ if(exists("c")){
 
 
 ## Check the padjust method selected
+## Choose BH by default
 if(exists("m")){
   ## If the selected methode is not a choice of the p.adjust methods
-  if(!m %in% c("BH","bonferroni")){
+  if(!m %in% p.adjust.methods){
     cat("Please enter a valid method\n");q()
   }
 }else{m="BH"}
