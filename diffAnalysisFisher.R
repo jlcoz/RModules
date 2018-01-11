@@ -16,8 +16,9 @@ MINNUM=2.2250738585072014e-308
 ## Help
 help <- function(){
   cat("\ndiffAnalysisFisher.R : Retrieve differential peaks from a count matrix\n")
-  cat("Usage: diffAnalysisFisher.R -i - -a N1 -b N2 -o -\n")
+  cat("Usage: diffAnalysisFisher.R -i - -f F -a N1 -b N2 -o -\n")
   cat("-i : Count matrix as a file or stdin (-) [Required]\n")
+  cat("-f : First line of the input table is a header : T/F [Default: F]\n")
   cat("-a : Total number of reads for sample 1 : N1 [Required]\n")
   cat("-b : Total number of reads for sample 2 : N2 [Required]\n")
   cat("-o : Output as a file or stdout (-) [Default: stdout]\n")
@@ -37,15 +38,26 @@ if(length(args)==0 || !is.na(charmatch("-help",args))){
     }
   }}
 
+
+## Set the head boolean to load the file accordingly
+## Input is considered without header by default
+if(exists("f")){
+  if(is.na(f)){
+    head=F
+  } else if (f=="T"){
+    head=T
+  } else {head = F}
+} else{ head = F}
+
 ## Load the matrix into a dataframe
 ## Load the table into a dataframe
 if(exists("i")){
   if (is.na(i)){
     cat("Input file does not exist\n"); q()
   } else if(i=="stdin" || i=="-"){
-    count_table=read.csv(pipe('cat /dev/stdin'), sep="\t", skip=0, header = T, comment.char = "", check.names = F)
+    count_table=read.csv(pipe('cat /dev/stdin'), sep="\t", skip=0, header = head, comment.char = "", check.names = F)
   } else if (file.exists(i)){
-    count_table=read.csv(i, sep="\t", skip=0, header = T, comment.char = "", check.names = F)
+    count_table=read.csv(i, sep="\t", skip=0, header = head, comment.char = "", check.names = F)
   }
   ## Test the second-to-end column to see if they contain only integers
   if(!all(sapply(count_table, function(x) class(x) %in% c("integer"))[-1])){

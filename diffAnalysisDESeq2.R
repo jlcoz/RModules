@@ -12,13 +12,14 @@ args=commandArgs(TRUE)
 ## Help
 help <- function(){
   cat("\ndiffAnalysisDESeq2.R : Retrieve differential peaks from a count matrix\n")
-  cat("Usage: diffAnalysisDESeq2.R -i - -a n1 -b n2 -n x1,x2... -o - -f F -r F\n")
+  cat("Usage: diffAnalysisDESeq2.R -i - -f F -a n1 -b n2 -n x1,x2... -o - -p F -r F\n")
   cat("-i : Count table as a file or stdin (-) [Required]\n")
+  cat("-f : First line of the input table is a header : T/F [Default: F]\n")
   cat("-a : Number of samples in the first condition [Required]\n")
   cat("-b : Numbre of samples in the second condition [Required]\n")
   cat("-n : Normalization factor as a vector : x1,x2,... [Default: DESeq2 computation\n")
   cat("-o : Output as a file or stdout (-) [Default: stdout]\n")
-  cat("-f : Adjusted p-values can be NA for all none-0 lines : T/F [Default: T]\n")
+  cat("-p : Adjusted p-values can be NA for all none-0 lines : T/F [Default: T]\n")
   cat("-r : Replace NA with 1 (pvalue/adjusted pvalue) and 0 (logFC) : T/F [Default: F]\n")
   cat("\n")
   q()
@@ -35,14 +36,25 @@ if(length(args)==0 || !is.na(charmatch("-help",args))){
     }
   }}
 
+
+## Set the head boolean to load the file accordingly
+## Input is considered without header by default
+if(exists("f")){
+  if(is.na(f)){
+    head=F
+  } else if (f=="T"){
+    head=T
+  } else {head = F}
+} else{ head = F}
+
 ## Load the table into a dataframe
 if(exists("i")){
   if (is.na(i)){
     cat("Input file does not exist\n"); q()
   } else if(i=="stdin" || i=="-"){
-    count_table=read.csv(pipe('cat /dev/stdin'), sep="\t", skip=0, header = T, comment.char = "", check.names = F)
+    count_table=read.csv(pipe('cat /dev/stdin'), sep="\t", skip=0, header = head, comment.char = "", check.names = F)
   } else if (file.exists(i)){
-      count_table=read.csv(i, sep="\t", skip=0, header = T, comment.char = "", check.names = F)
+      count_table=read.csv(i, sep="\t", skip=0, header = head, comment.char = "", check.names = F)
   }
   ## Test the second-to-end column to see if they contain only integers
   if(!all(sapply(count_table, function(x) class(x) %in% c("integer"))[-1])){
@@ -85,8 +97,8 @@ if(exists("o")){
 } else {output=stdout()}
 
 ## Set the independant filterin g boolean for the DESeq2 p.adjust method
-if(exists("f")){
-  if (f=="F") {
+if(exists("p")){
+  if (p=="F") {
     independant_filtering=F
   } else {independant_filtering=T}
 } else {independant_filtering=T}
