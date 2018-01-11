@@ -12,7 +12,7 @@ help <- function(){
   cat("\nAdjust the p-values of a given column of a file, and output this file added the adjusted p-value column\n")
   cat("Usage: adjustPval.R -i - -f F -c N -m BH -o -\n")
   cat("-i : Input table as a file or stdin (-) [Required]\n")
-  cat("-f : First line of the input table is a header : T/F [Default: T]\n")
+  cat("-f : First line of the input table is a header : T/F [Default: F]\n")
   cat("-c : Column with raw p-values (int) [Required]\n")
   cat("-m : P-value adjust method used : BH or bonferroni [Default: BH]\n")
   cat("-o : Output as a file or stdout (-) [Default: stdout]\n")
