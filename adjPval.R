@@ -10,7 +10,7 @@ MINNUM=2.2250738585072014e-308
 ## Help
 help <- function(){
   cat("\nAdjust the p-values of a given column of a file, and output this file added the adjusted p-value column\n")
-  cat("Usage: adjustPval.R -i - -f T -c N -m METHOD -o -\n")
+  cat("Usage: adjustPval.R -i - -f F -c N -m BH -o -\n")
   cat("-i : Input table as a file or stdin (-) [Required]\n")
   cat("-f : First line of the input table is a header : T/F [Default: T]\n")
   cat("-c : Column with raw p-values (int) [Required]\n")
@@ -34,11 +34,14 @@ if(length(args)==0 || !is.na(charmatch("-help",args))){
   }}
 
 ## Set the head boolean to load the file accordingly
+## Input is considered without header by default
 if(exists("f")){
-  if(is.na(f) || f=="T"){
+  if(is.na(f)){
+    head=F
+  } else if (f=="T"){
     head=T
-  } else { head = F}
-} else{ head = T}
+  } else {head = F}
+} else{ head = F}
 
 ## Load the matrix into a dataframe
 if(exists("i")){
