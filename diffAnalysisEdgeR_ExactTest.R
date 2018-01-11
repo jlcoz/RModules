@@ -13,7 +13,7 @@ args=commandArgs(TRUE)
 
 ## Help
 help <- function(){
-  cat("\ndiffAnalysisEdgeR.R : Retrieve differential peaks from a count matrix\n")
+  cat("\ndiffAnalysisEdgeR_ExactTest.R : Retrieve differential peaks from a count matrix using a modified Fisher's Exact Test\n")
   cat("Usage: diffAnalysisEdgeR.R -i - -f F -a n1 -b n2 -n x1,x2... -o -\n")
   cat("-i : Count table as a file or stdin (-) [Required]\n")
   cat("-f : First line of the input table is a header : T/F [Default: F]\n")

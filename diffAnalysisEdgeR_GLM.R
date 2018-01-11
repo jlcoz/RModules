@@ -13,7 +13,7 @@ args=commandArgs(TRUE)
 
 ## Help
 help <- function(){
-  cat("\ndiffAnalysisEdgeR.R : Retrieve differential peaks from a count matrix\n")
+  cat("\ndiffAnalysisEdgeR_GLM.R : Retrieve differential peaks from a count matrix using general linear model methods\n")
   cat("Usage: diffAnalysisEdgeR.R -i - -f F -a n1 -b n2 -n x1,x2... -o -\n")
   cat("-i : Count table as a file or stdin (-) [Required]\n")
   cat("-f : First line of the input table is a header : T/F [Default: F]\n")
@@ -120,8 +120,8 @@ dge <- estimateDisp(dge, design)
 dge <- estimateGLMCommonDisp(dge,design)  #Estimates a common negative binomial dispersion
 dge <- estimateGLMTrendedDisp(dge,design) #Estimates the abundance-dispersion trend by Cox-Reid approximate profile likelihood
 dge <- estimateGLMTagwiseDisp(dge,design) #Compute an empirical Bayes estimate of the negative binomial dispersion parameter for each transcript, with expre
-fit <- glmQLFit(dge,design)    #Fit a negative binomial generalized log-linear model to counts
-lrt <- glmQLFTest(fit,coef=fit$design) #Conducts likelihood ratio tests for one or more coefficients in the linear model
+fit <- glmFit(dge,design)    #Fit a negative binomial generalized log-linear model to counts
+lrt <- glmLRT(fit,coef=fit$design) #Conducts likelihood ratio tests for one or more coefficients in the linear model
 
 ## Multiple testing correction : Benjamimi Hochberg method
 adj_pval=p.adjust(lrt$table$PValue,method = "BH")
