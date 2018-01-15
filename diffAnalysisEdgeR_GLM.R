@@ -113,6 +113,7 @@ if(!NF){
 
 ## Create a design matrix needed for the dispersion estimation
 design <- model.matrix(~condition)
+colnames(design)<-levels(design)
 
 ## Estimation of the dispersion parameter
 dge <- estimateDisp(dge, design)
